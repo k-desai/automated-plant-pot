@@ -18,7 +18,6 @@ Adafruit_SSD1306 display(OLED_RESET);
 const byte interruptPin = D4;
 volatile byte interruptCounter = 0;
 int numberOfInterrupts = 0;
-volatile bool flag = false;
 volatile bool Waterflag = false;
 const int sensor_pin = A0;  /* Connect Soil moisture analog sensor pin to A0 of NodeMCU */
 const int MoisturePower = D5;  // Assigning name to Trasistor 
@@ -43,6 +42,11 @@ void setup() {
   display.display();
   WiFi.mode(WIFI_OFF);
 }
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+//  Functions
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Main functions being called.
 void CheckAndWater(){
       ReadMoistureLevel();
       MoistureLogic();
@@ -50,6 +54,8 @@ void CheckAndWater(){
       WaterPlant();
       ClearDisplay();
 }
+
+//Display on OLED Screen.
 void DisplayStats(){
         display.setTextSize(1);
         display.setTextColor(WHITE);
@@ -60,14 +66,16 @@ void DisplayStats(){
         display.println(ExtraMessage);
         display.display();
      }
-     
+// Clear the display of any information.
 void ClearDisplay(){
         display.clearDisplay();
         display.display();
 }
+// What to do when an interrupt is detected
 void handleInterrupt() {
     CheckAndWater();
 }
+//Read the Moisture level and format it
 void ReadMoistureLevel(){
   digitalWrite(MoisturePower, HIGH);   // making pin high
   delay(1000);
@@ -76,7 +84,13 @@ void ReadMoistureLevel(){
   delay(1000);
   digitalWrite(MoisturePower, LOW);    // making pin low
 }
-
+// Convert the value from the moisture sensor to a value between 0-100
+int convertToPercent(int value){
+  int percentValue = 0;
+  percentValue = map(value, 1023, 465, 0, 100);
+  return percentValue;
+}
+// Do action on moisture level
 void MoistureLogic(){
   if (moisture_percentage < WaterAtLevel)
   {
@@ -89,12 +103,7 @@ void MoistureLogic(){
   Waterflag = false;
   }
 }
-int convertToPercent(int value)
-{
-  int percentValue = 0;
-  percentValue = map(value, 1023, 465, 0, 100);
-  return percentValue;
-}
+// activate the motor to water the pot
 void WaterPlant(){
   if (Waterflag){
   digitalWrite(PumpPower, HIGH);    // making pin low
@@ -111,15 +120,11 @@ void WaterPlant(){
   delay(5000);
   }
 }
-void ClearFlag() {
-      flag = false;
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 //  Void Loop
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////
 void loop() {
 WiFi.forceSleepBegin();
       CheckAndWater();
-      delay(50000);
+      delay(3600000); // Check every 1 hour from last watering.
 }
