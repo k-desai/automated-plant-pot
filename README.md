@@ -1,2 +1,2 @@
-# automated-plant-pot
-Pant pot automated watering system
+# Automated-Plant-Pot
+Plant pot automated watering system
